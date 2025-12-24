@@ -9,11 +9,12 @@ include_directories(include)
 
 add_library(nanotui
     src/ui.c
-    src/widget.c
+    src/node.c
     src/layout.c
     src/render.c
     src/backend_ncurses.c
     src/widgets/label.c
+    src/layouts/vbox.c
 )
 
 target_link_libraries(nanotui ${CURSES_LIBRARIES})
