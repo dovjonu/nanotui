@@ -1,13 +1,13 @@
 #include "../node_internal.h"
-#include <nanotui/layouts/vbox.h>
+#include <nanotui/layouts/hbox.h>
 #include <stdlib.h>
 
-/* VBox private data */
+/* HBox private data */
 typedef struct {
     int spacing;
-} VBoxData;
+} HBoxData;
 
-static BorderConfig vbox_default_border(Node* self) {
+static BorderConfig hbox_default_border(Node* self) {
     (void)self;
     return (BorderConfig){
         .mask = BORDER_NONE,
@@ -17,11 +17,11 @@ static BorderConfig vbox_default_border(Node* self) {
     };
 }
 
-static void vbox_measure(Node* self) {
+static void hbox_measure(Node* self) {
     if (!self)
         return;
 
-    VBoxData* d = self->impl;
+    HBoxData* d = self->impl;
     if (!d)
         return;
 
@@ -33,13 +33,10 @@ static void vbox_measure(Node* self) {
         if (!c)
             continue;
 
-        if (c->width_hint.pref > pref_w)
-            pref_w = c->width_hint.pref;
-        pref_h += c->height_hint.pref;
+        if (c->height_hint.pref > pref_h)
+            pref_h = c->height_hint.pref;
+        pref_w += c->width_hint.pref;
     }
-
-    if (self->child_count > 1)
-        pref_h += d->spacing * (self->child_count - 1);
 
     BorderMask border_mask = node_border_get(self).mask;
     if (border_mask & BORDER_LEFT)
@@ -60,12 +57,12 @@ static void vbox_measure(Node* self) {
     self->height_hint.pref = pref_h;
 }
 
-/* VBox layout function */
-static void vbox_layout(Node* self) {
+/* HBox layout function */
+static void hbox_layout(Node* self) {
     if (!self)
         return;
 
-    VBoxData* d = self->impl;
+    HBoxData* d = self->impl;
     if (!d)
         return;
 
@@ -101,7 +98,9 @@ static void vbox_layout(Node* self) {
         return;
 
 
-    /* Compute total preferred height (main axis) */
+
+
+    /* Compute total preferred width (main axis) */
     int total_pref = 0;
     int total_flex = 0;
     int child_count = 0;
@@ -110,27 +109,31 @@ static void vbox_layout(Node* self) {
         Node* c = self->children[i];
         if (!c)
             continue;
+
         child_count++;
-        total_pref += c->height_hint.pref;
+
+        total_pref += c->width_hint.pref;
+
         if (c->flex > 0)
             total_flex += c->flex;
+        
     }
 
     if (child_count == 0)
         return;
 
     int total_spacing = d->spacing * (child_count - 1);
-    int available_height = inner_h - total_spacing;
-    if (available_height <= 0)
+    int available_width = inner_w - total_spacing;
+    if (available_width <= 0)
         return;
 
-    int extra = available_height - total_pref;
+    int extra = available_width - total_pref;
     if (extra < 0)
-        extra = 0;
-
+        extra = 0;  
+        
     /* Assign geometry to children (sequential, pref-sized; flex consumes extra) */
-    int y = inner_y;
-    int remaining = inner_h;
+    int x = inner_x;
+    int remaining = inner_w;
     int remaining_extra = extra;
 
     for (int i = 0; i < self->child_count; i++) {
@@ -139,10 +142,10 @@ static void vbox_layout(Node* self) {
             continue;
 
         /* spacing before child (except first visible child) */
-        if (y != inner_y) {
+        if (x != inner_x) {
             if (remaining < d->spacing)
                 break;
-            y += d->spacing;
+            x += d->spacing;
             remaining -= d->spacing;
         }
 
@@ -154,30 +157,30 @@ static void vbox_layout(Node* self) {
             remaining_extra -= flex_share;
         }
 
-        int desired_h = c->height_hint.pref + flex_share;
-        if (desired_h < 0)
-            desired_h = 0;
-        if (desired_h > remaining)
-            desired_h = remaining;
+        int desired_w = c->width_hint.pref + flex_share;
+        if (desired_w < 0)
+            desired_w = 0;
+        if (desired_w > remaining)
+            desired_w = remaining;
 
-        node_set_rect(c, inner_x, y, inner_w, desired_h);
+        node_set_rect(c, x, inner_y, desired_w, inner_h);
 
-        y += desired_h;
-        remaining -= desired_h;
+        x += desired_w;
+        remaining -= desired_w;
         if (remaining <= 0)
             break;
     }
 }
 
-/* VBox constructor */
-Node* vbox_create(int spacing) {
+/* HBox constructor */
+Node* hbox_create(int spacing) {
     Node* n = calloc(1, sizeof(Node));
     if (!n)
         return NULL;
 
     node_init(n);
 
-    VBoxData* d = malloc(sizeof(VBoxData));
+    HBoxData* d = malloc(sizeof(HBoxData));
     if (!d) {
         free(n);
         return NULL;
@@ -185,13 +188,13 @@ Node* vbox_create(int spacing) {
 
     d->spacing = spacing;
 
-    n->layout = vbox_layout;
-    n->measure = vbox_measure;
+    n->layout = hbox_layout;
+    n->measure = hbox_measure;
     n->render = NULL;   /* layout nodes do not draw */
     n->impl = d;
 
     /* Defaults */
-    n->default_border = vbox_default_border;
+    n->default_border = hbox_default_border;
 
     return n;
 }

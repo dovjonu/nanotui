@@ -15,6 +15,7 @@ add_library(nanotui
     src/backend_ncurses.c
     src/widgets/label.c
     src/layouts/vbox.c
+    src/layouts/hbox.c
 )
 
 target_link_libraries(nanotui ${CURSES_LIBRARIES})

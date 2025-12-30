@@ -1,33 +1,7 @@
 #ifndef NANOTUI_NODE_INTERNAL_H
 #define NANOTUI_NODE_INTERNAL_H
 
-#include <nanotui/render.h>
-
-typedef struct Node Node;
-
-typedef enum {
-    BORDER_NONE   = 0,
-    BORDER_TOP    = 1 << 0,
-    BORDER_RIGHT  = 1 << 1,
-    BORDER_BOTTOM = 1 << 2,
-    BORDER_LEFT   = 1 << 3,
-} BorderMask;
-
-typedef struct {
-    char top;
-    char bottom;
-    char left;
-    char right;
-    char top_left;
-    char top_right;
-    char bottom_left;
-    char bottom_right;
-} BorderStyle;
-
-typedef struct {
-    BorderMask mask;
-    BorderStyle style;
-} BorderConfig;
+#include <nanotui/node.h>
 
 
 struct Node {
@@ -35,7 +9,13 @@ struct Node {
     int x, y;
     int width, height;
 
+    SizeHint width_hint;
+    SizeHint height_hint;
+
+    int flex;
+
     /* layout + render behavior */
+    void (*measure)(Node* self);
     void (*layout)(Node* self);
     void (*render)(Node* self, RenderBuffer* rb);
 
@@ -52,6 +32,9 @@ struct Node {
     /* node-specific data (Label text, VBox spacing, etc.) */
     void* impl;
 };
+
+/* Internal initializer used by widgets/layouts after calloc(sizeof(Node)). */
+void node_init(Node* node);
 
 void node_render_border(Node* n, RenderBuffer* rb);
 

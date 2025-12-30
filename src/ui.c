@@ -3,12 +3,7 @@
 
 #include <nanotui/ui.h>
 #include <nanotui/render.h>
-
-#include <nanotui/widgets/label.h>
-#include <nanotui/layouts/vbox.h>
 #include <nanotui/node.h>
-
-#include "node_internal.h"
 
 
 /* forward declaration */
@@ -23,11 +18,13 @@ UI* ui_create(void) {
     UI* ui = malloc(sizeof(UI));
     if (!ui) return NULL;
     ui->running = 0;
+    ui->root = NULL;
     return ui;
 }
 
 void ui_run(UI* ui) {
     if (!ui) return;
+    if (!ui->root) return;
 
     initscr();
     cbreak();
@@ -41,54 +38,9 @@ void ui_run(UI* ui) {
     RenderBuffer* rb = render_buffer_create(w, h);
     render_buffer_clear(rb);
 
-    Node* root = vbox_create(1);
+    node_set_rect(ui->root, 0, 0, w, h);
 
-    root->border.mask =
-        BORDER_TOP | BORDER_BOTTOM | BORDER_LEFT | BORDER_RIGHT;
-
-    root->border.style = (BorderStyle){
-        .top = '-',
-        .bottom = '-',
-        .left = '|',
-        .right = '|',
-        .top_left = '+',
-        .top_right = '+',
-        .bottom_left = '+',
-        .bottom_right = '+'
-    };
-
-    node_add_child(root, label_create("Hello"));
-    node_add_child(root, label_create("World"));
-    node_add_child(root, label_create("!"));
-
-    Node* second = vbox_create(1);
-
-    second->border.mask =
-        BORDER_TOP | BORDER_BOTTOM | BORDER_LEFT | BORDER_RIGHT;
-
-    second->border.style = (BorderStyle){
-        .top = '-',
-        .bottom = '-',
-        .left = '|',
-        .right = '|',
-        .top_left = '+',
-        .top_right = '+',
-        .bottom_left = '+',
-        .bottom_right = '+'
-    };
-
-    node_add_child(second, label_create("Nested"));
-    node_add_child(second, label_create("VBox"));
-    node_add_child(root, second);
-
-
-    ui_set_root(ui, root);
-    root->x = 0;
-    root->y = 0;
-    root->width = w;
-    root->height = h;
-
-    node_render(root, rb);
+    node_render(ui->root, rb);
 
     backend_ncurses_flush(rb);
 
@@ -99,6 +51,7 @@ void ui_run(UI* ui) {
 }
 
 void ui_set_root(UI* ui, Node* root) {
+    if (!ui) return;
     ui->root = root;
 }
 
