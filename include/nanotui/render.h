@@ -5,6 +5,7 @@
 
 typedef struct {
     uint32_t ch;   /* Unicode codepoint */
+    uint32_t attr; /* ncurses attributes */
 } Cell;
 
 typedef struct {
@@ -20,5 +21,6 @@ void render_buffer_destroy(RenderBuffer* rb);
 /* Utilities */
 void render_buffer_clear(RenderBuffer* rb);
 void render_buffer_put(RenderBuffer* rb, int x, int y, uint32_t ch);
+void render_buffer_put_attr(RenderBuffer* rb, int x, int y, uint32_t ch, uint32_t attr);
 
 #endif /* NANOTUI_RENDER_H */

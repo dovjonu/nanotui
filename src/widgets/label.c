@@ -19,6 +19,18 @@ static BorderConfig label_default_border(Node* self) {
     };
 }
 
+void label_set_text(Node* label, const char* text) {
+    if (!label)
+        return;
+
+    LabelData* d = label->impl;
+    if (!d)
+        return;
+
+    free(d->text);
+    d->text = strdup(text ? text : "");
+}
+
 Node* label_create(const char* text) {
     Node* n = calloc(1, sizeof(Node));
     if (!n)

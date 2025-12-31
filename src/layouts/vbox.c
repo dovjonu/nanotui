@@ -184,6 +184,7 @@ Node* vbox_create(int spacing) {
     }
 
     d->spacing = spacing;
+    //d->layout_mode = layout_mode;
 
     n->layout = vbox_layout;
     n->measure = vbox_measure;

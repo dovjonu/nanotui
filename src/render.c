@@ -30,6 +30,7 @@ void render_buffer_clear(RenderBuffer* rb) {
     if (!rb) return;
     for (int i = 0; i < rb->width * rb->height; i++) {
         rb->cells[i].ch = ' ';
+        rb->cells[i].attr = 0;
     }
 }
 
@@ -37,4 +38,11 @@ void render_buffer_put(RenderBuffer* rb, int x, int y, uint32_t ch) {
     if (!rb) return;
     if (x < 0 || y < 0 || x >= rb->width || y >= rb->height) return;
     rb->cells[y * rb->width + x].ch = ch;
+}
+
+void render_buffer_put_attr(RenderBuffer* rb, int x, int y, uint32_t ch, uint32_t attr) {
+    if (!rb) return;
+    if (x < 0 || y < 0 || x >= rb->width || y >= rb->height) return;
+    rb->cells[y * rb->width + x].ch = ch;
+    rb->cells[y * rb->width + x].attr = attr;
 }

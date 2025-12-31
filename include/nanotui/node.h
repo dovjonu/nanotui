@@ -2,9 +2,10 @@
 #define NANOTUI_NODE_H
 
 #include <nanotui/render.h>
+#include <nanotui/ui.h>
 
 typedef enum {
-	BORDER_NONE   = 0,
+	BORDER_NONE = 0,
 	BORDER_TOP    = 1 << 0,
 	BORDER_RIGHT  = 1 << 1,
 	BORDER_BOTTOM = 1 << 2,
@@ -90,6 +91,24 @@ void node_border_set_mask(Node* node, BorderMask mask);
 void node_border_set_style(Node* node, BorderStyle style);
 void node_border_set_title(Node* node, BorderTitle title);
 void node_border_patch_style(Node* node, BorderStyleMask fields, BorderStyle patch);
+
+
+// Focus / input
+void node_set_focusable(Node* node, int focusable);
+int  node_is_focusable(const Node* node);
+
+void node_set_focus(Node* node, int focused);
+int  node_has_focus(const Node* node);
+
+// Dispatch one key to a node (calls node->on_key if present)
+int node_handle_key(Node* node, int key);
+
+// Find next focusable in tree
+Node* node_focus_next(Node* root, Node* current);
+Node* node_focus_prev(Node* root, Node* current);
+
+void node_set_ui(Node* node, UI* ui);
+UI* node_get_ui(const Node* node);
 
 void node_destroy(Node* node);
 

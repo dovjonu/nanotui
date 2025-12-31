@@ -2,6 +2,7 @@
 #define NANOTUI_NODE_INTERNAL_H
 
 #include <nanotui/node.h>
+#include <nanotui/ui.h>
 
 
 struct Node {
@@ -20,6 +21,8 @@ struct Node {
     void (*render)(Node* self, RenderBuffer* rb);
 
     /* tree structure */
+    UI* ui;
+    Node* parent;
     Node** children;
     int child_count;
     int child_capacity;
@@ -28,6 +31,10 @@ struct Node {
     BorderConfig (*default_border)(Node* self);
     int has_explicit_border;
     BorderConfig border;
+
+    int focusable;
+    int focused;
+    int (*on_key)(Node* self, int key);
 
     /* node-specific data (Label text, VBox spacing, etc.) */
     void* impl;

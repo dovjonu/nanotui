@@ -169,6 +169,25 @@ static void hbox_layout(Node* self) {
         remaining -= desired_w;
         if (remaining <= 0)
             break;
+
+        // if (node_has_focus(self)){
+        //     BorderConfig border = node_border_get(self);
+        //     BorderStyle style = border.style;
+        //     style.top_right = 'O';
+        //     style.bottom_right = 'O';
+        //     style.top_left = 'O';
+        //     style.bottom_left = 'O';
+        //     node_border_set_style(self, style);
+        // }
+        // else {
+        //     BorderConfig border = node_border_get(self);
+        //     BorderStyle style = border.style;
+        //     style.top_right = '+';
+        //     style.bottom_right = '+';
+        //     style.top_left = '+';
+        //     style.bottom_left = '+';
+        //     node_border_set_style(self, style);
+        // }
     }
 }
 
@@ -195,6 +214,8 @@ Node* hbox_create(int spacing) {
 
     /* Defaults */
     n->default_border = hbox_default_border;
+
+    // node_set_focusable(n, 1);
 
     return n;
 }

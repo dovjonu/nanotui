@@ -238,6 +238,8 @@ void node_add_child(Node* parent, Node* child) {
     }
 
     parent->children[parent->child_count++] = child;
+
+    child->parent = parent;
 }
 
 void node_render(Node* node, RenderBuffer* rb) {
@@ -331,4 +333,128 @@ void node_render_border(Node* n, RenderBuffer* rb) {
         render_buffer_put(rb, title_x - 1, y0, ' ');
         render_buffer_put(rb, title_x + title_len, y0, ' ');
     }
+}
+
+void node_set_focusable(Node* node, int focusable) {
+    if (!node) return;
+    node->focusable = focusable ? 1 : 0;
+}
+
+int node_is_focusable(const Node* node) {
+    return node ? node->focusable : 0;
+}
+
+void node_set_focus(Node* node, int focused) {
+    if (!node) return;
+    node->focused = focused ? 1 : 0;
+}
+
+int node_has_focus(const Node* node) {
+    return node ? node->focused : 0;
+}
+
+int node_handle_key(Node* node, int key) {
+    if (!node) return 0;
+    if (node->on_key) return node->on_key(node, key);
+    return 0;
+}
+
+/* preorder traversal: find next focusable after 'current' */
+static Node* next_node(Node* current) {
+    if (!current) return NULL;
+    if (current->child_count > 0)
+        return current->children[0];
+    
+    // search next sibling
+    Node* parent = current->parent;
+    if (!parent) return NULL;
+    for (int i = 0; i < parent->child_count; i++) {
+        if (parent->children[i] == current) {
+            if (i + 1 < parent->child_count)
+                return parent->children[i + 1];
+            else
+                return next_node(parent);
+        }
+    }
+    return NULL;
+}
+
+Node* node_focus_next(Node* root, Node* current) {
+    Node* n = next_node(current);
+    while (n) {
+        if (node_is_focusable(n))
+            return n;
+        else
+            n = next_node(n);
+    }
+}
+
+static Node* last_node(Node* n) {
+    if (!n) return NULL;
+
+    while (n->child_count > 0) {
+        n = n->children[n->child_count - 1];
+    }
+    return n;
+}
+
+
+static Node* prev_node(Node* root, Node* current, int check_children) {
+    if (!current)
+        return last_node(root);
+
+    /* wrap-around */
+    if (current == root)
+        return last_node(root);
+
+    Node* parent = current->parent;
+    if (!parent)
+        return last_node(root);
+
+    /* find current index in parent */
+    for (int i = 0; i < parent->child_count; i++) {
+        if (parent->children[i] == current) {
+
+            /* has previous sibling */
+            if (i > 0) {
+                Node* prev = parent->children[i - 1];
+
+                if (check_children && prev->child_count > 0)
+                    return last_node(prev);
+
+                return prev;
+            }
+
+            /* no previous sibling */
+            return parent;
+        }
+    }
+
+    return root;
+}
+
+Node* node_focus_prev(Node* root, Node* current) {
+    Node* n = prev_node(root, current, 1);
+    while (n) {
+        if (node_is_focusable(n))
+            return n;
+        n = prev_node(root, n, 1);
+    }
+    return NULL;
+}
+
+void node_set_ui(Node* node, UI* ui) {
+    if (!node)
+        return;
+    node->ui = ui;
+}
+
+UI* node_get_ui(const Node* node) {
+    if (!node)
+        return NULL;
+
+    if (!node->ui)
+        return node_get_ui(node->parent);
+
+    return node->ui;
 }

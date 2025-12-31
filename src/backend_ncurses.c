@@ -8,7 +8,7 @@ void backend_ncurses_flush(RenderBuffer* rb) {
     for (int y = 0; y < rb->height; y++) {
         for (int x = 0; x < rb->width; x++) {
             Cell* c = &rb->cells[y * rb->width + x];
-            mvaddch(y, x, c->ch);
+            mvaddch(y, x, c->ch | c->attr);
         }
     }
     refresh();

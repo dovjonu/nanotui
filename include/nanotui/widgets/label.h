@@ -3,6 +3,7 @@
 
 #include <nanotui/node.h>
 
+void label_set_text(Node* label, const char* text);
 Node* label_create(const char* text);
 void label_destroy(Node* n);
 
