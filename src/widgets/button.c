@@ -8,6 +8,8 @@
 typedef struct {
     char* text;
     ButtonCallback on_press;
+    int pressed;
+    long pressed_at_ms;
     void* user_data;
 } ButtonData;
 
@@ -28,12 +30,26 @@ static void button_render(Node* self, RenderBuffer* rb) {
     ButtonData* d = self->impl;
     const char* t = (d && d->text) ? d->text : "";
 
-    char l = '[';
-    char r = ']';
+    wchar_t l;
+    wchar_t r;
     uint32_t attr = 0;
 
-    if (node_has_focus(self)) {
-        attr = COLOR_PAIR(1) | A_BOLD;
+    long now = ui_now_ms();
+
+    if (d->pressed && now - d->pressed_at_ms > 120) {
+        d->pressed = 0;
+    }
+
+    
+    if (d->pressed) {
+        l  = L'⟪';
+        r = L'⟫';
+    } else if (node_has_focus(self)) {
+        l = L'⟨';
+        r = L'⟩';
+    } else {
+        l  = L'[';
+        r = L']';
     }
 
     int x = self->x;
@@ -60,6 +76,8 @@ static int button_on_key(Node* self, int key) {
     if (!d) return 0;
 
     if (key == '\n' || key == ' ') {
+        d->pressed = 1;
+        d->pressed_at_ms = ui_now_ms();
         if (d->on_press) d->on_press(self, d->user_data);
         return 1;
     }

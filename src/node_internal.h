@@ -13,7 +13,8 @@ struct Node {
     SizeHint width_hint;
     SizeHint height_hint;
 
-    int flex;
+    int flex_x;
+    int flex_y;
 
     /* layout + render behavior */
     void (*measure)(Node* self);
@@ -32,6 +33,7 @@ struct Node {
     int has_explicit_border;
     BorderConfig border;
 
+    int enabled;
     int focusable;
     int focused;
     int (*on_key)(Node* self, int key);

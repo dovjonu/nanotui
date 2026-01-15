@@ -2,10 +2,14 @@
 #define NANOTUI_RENDER_H
 
 #include <stdint.h>
+#include <ncursesw/ncurses.h>
+#include <wchar.h>
+#include <stdint.h>
 
 typedef struct {
-    uint32_t ch;   /* Unicode codepoint */
-    uint32_t attr; /* ncurses attributes */
+    wchar_t ch;
+    attr_t  attr;
+    short   color_pair;
 } Cell;
 
 typedef struct {
@@ -20,7 +24,8 @@ void render_buffer_destroy(RenderBuffer* rb);
 
 /* Utilities */
 void render_buffer_clear(RenderBuffer* rb);
-void render_buffer_put(RenderBuffer* rb, int x, int y, uint32_t ch);
-void render_buffer_put_attr(RenderBuffer* rb, int x, int y, uint32_t ch, uint32_t attr);
+void render_buffer_put(RenderBuffer* rb, int x, int y, wchar_t ch);
+void render_buffer_put_attr(RenderBuffer* rb, int x, int y, wchar_t ch, attr_t attr);
+void render_buffer_put_style(RenderBuffer* rb, int x, int y, wchar_t ch, attr_t attrs, short color_pair);
 
 #endif /* NANOTUI_RENDER_H */

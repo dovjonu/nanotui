@@ -13,5 +13,6 @@ void ui_destroy(UI* ui);
 void ui_lock(UI* ui);
 void ui_unlock(UI* ui);
 int ui_get_locked(const UI* ui);
+long ui_now_ms(void);
 
 #endif

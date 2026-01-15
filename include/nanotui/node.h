@@ -13,15 +13,16 @@ typedef enum {
 } BorderMask;
 
 typedef struct {
-	char top;
-	char bottom;
-	char left;
-	char right;
-	char top_left;
-	char top_right;
-	char bottom_left;
-	char bottom_right;
+    wchar_t top;
+    wchar_t bottom;
+    wchar_t left;
+    wchar_t right;
+    wchar_t top_left;
+    wchar_t top_right;
+    wchar_t bottom_left;
+    wchar_t bottom_right;
 } BorderStyle;
+
 
 typedef enum {
     BORDER_TITLE_LEFT,
@@ -77,12 +78,17 @@ void node_set_height_hint(Node* node, SizeHint hint);
 SizeHint node_get_width_hint(const Node* node);
 SizeHint node_get_height_hint(const Node* node);
 
-void node_set_flex(Node* node, int flex);
-int node_get_flex(const Node* node);
+void node_set_flex_x(Node* node, int flex);
+int node_get_flex_x(const Node* node);
+
+void node_set_flex_y(Node* node, int flex);
+int node_get_flex_y(const Node* node);
 
 /* Border helpers */
 BorderStyle node_border_style_ascii(void);
 BorderStyle node_border_style_ascii_thick(void);
+BorderStyle node_border_style_unicode(void);
+BorderStyle node_border_style_unicode_rounded(void);
 BorderConfig node_border_get(const Node* node);
 
 void node_border_clear_override(Node* node);
@@ -99,6 +105,9 @@ int  node_is_focusable(const Node* node);
 
 void node_set_focus(Node* node, int focused);
 int  node_has_focus(const Node* node);
+
+void node_set_enabled(Node* node, int enabled);
+int  node_is_enabled(const Node* node);
 
 // Dispatch one key to a node (calls node->on_key if present)
 int node_handle_key(Node* node, int key);

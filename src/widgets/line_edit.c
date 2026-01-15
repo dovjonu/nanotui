@@ -7,9 +7,13 @@
 #include <ncurses.h>
 
 typedef struct {
-    int length; // the physical user setable width of the line edit
-    int cursor_pos;
-    char* text;
+    int length;              // the physical user setable width of the line edit
+    int cursor_pos;         //  position of the cursor
+    int scroll_offset;     //  offset for scrolling text if it exceeds length
+    int editing;          //   1 if we are in the editing mode
+    int cursor_blink;    //    1 if the cursor is currently visible (for blinking)
+    long last_blink_ms; //     last time the cursor blink state changed
+    char* text;        //      the text content
 } LineEditData;
 
 static void line_edit_measure(Node* self) {
@@ -22,12 +26,17 @@ static void line_edit_measure(Node* self) {
 
     self->width_hint.min = len;
     self->width_hint.pref = len;
-    self->width_hint.max = -1;
+    self->width_hint.max = len;
 }
 
 static void line_edit_render(Node* self, RenderBuffer* rb) {
     LineEditData* d = self->impl;
     const char* t = (d && d->text) ? d->text : "";
+    long now = ui_now_ms();
+    if (d->editing && now - d->last_blink_ms >= 500) {
+        d->cursor_blink = !d->cursor_blink;
+        d->last_blink_ms = now;
+    }
 
     uint32_t attr = A_STANDOUT;
 
@@ -35,22 +44,77 @@ static void line_edit_render(Node* self, RenderBuffer* rb) {
         attr = COLOR_PAIR(1) | A_BOLD | A_STANDOUT;
     }
 
+    if (!node_is_enabled(self)) {
+        attr |= A_DIM;
+    }
+
     int x = self->x;
     int y = self->y;
     int w = self->width;
     if (w <= 0 || self->height <= 0) return;
 
-    // draw text
-    int tx = x;
-    int max = w;
-    for (int i = 0; i < max && t[i]; i++) {
-        render_buffer_put_attr(rb, tx + i, y, t[i], attr);
+    int visible = w;
+
+    for (int i = 0; i < visible; i++) {
+        int ti = d->scroll_offset + i;
+
+        wchar_t ch = L' ';
+        if (ti < (int)strlen(t)) {
+            ch = t[ti];
+        }
+
+        render_buffer_put_attr(rb, x + i, y, ch, attr);
     }
-    if (d->length > (int)strlen(t)) {
-        for (int i = (int)strlen(t); i < d->length && (tx + i) < (x + w); i++) {
-            render_buffer_put_attr(rb, tx + i, y, ' ', attr);
+
+
+    if (d->editing && d->cursor_blink) {
+        int cx = d->cursor_pos - d->scroll_offset;
+        if (cx >= 0 && cx < w) {
+            attr_t cattr = COLOR_PAIR(1) | A_BOLD | A_STANDOUT | A_UNDERLINE;
+
+            wchar_t ch = L' ';
+            if (d->cursor_pos < (int)strlen(t))
+                ch = t[d->cursor_pos];
+
+            render_buffer_put_attr(rb, x + cx, y, ch, cattr);
         }
     }
+
+}
+
+static void line_edit_ensure_cursor_visible(Node* self) {
+    LineEditData* d = self->impl;
+    if (!d) return;
+
+    int w = self->width;
+    if (w <= 0) w = 1;
+
+    int len = (int)strlen(d->text);
+
+    /* Clamp cursor */
+    if (d->cursor_pos < 0) d->cursor_pos = 0;
+    if (d->cursor_pos > len) d->cursor_pos = len;
+
+    /* Reserve one column for cursor when editing */
+    int text_width = w;
+    if (d->editing && text_width > 1)
+        text_width = w - 1;
+
+    /* Keep cursor visible */
+    if (d->cursor_pos < d->scroll_offset) {
+        d->scroll_offset = d->cursor_pos;
+    } else if (d->cursor_pos > d->scroll_offset + text_width) {
+        d->scroll_offset = d->cursor_pos - text_width;
+    }
+
+    /* Clamp scroll_offset so text can shrink back */
+    int max_scroll = len - text_width;
+    if (max_scroll < 0) max_scroll = 0;
+
+    if (d->scroll_offset > max_scroll)
+        d->scroll_offset = max_scroll;
+    if (d->scroll_offset < 0)
+        d->scroll_offset = 0;
 }
 
 static int line_edit_on_key(Node* self, int key) {
@@ -60,14 +124,19 @@ static int line_edit_on_key(Node* self, int key) {
     UI* ui = node_get_ui(self);
 
     // Enter to lock/start editing
-    if (key == '\n' || key == KEY_ENTER) {
+    if (node_is_enabled(self) && (key == '\n' || key == KEY_ENTER)) {
         if (ui) ui_lock(ui);
+        d->editing = 1;
+        d->last_blink_ms = ui_now_ms();
+        d->cursor_blink = 1;
+        line_edit_ensure_cursor_visible(self);
         return 1;
     }
 
     // ESC to unlock/stop editing
     if (key == 27) {
         if (ui) ui_unlock(ui);
+        d->editing = 0;
         return 1;
     }
 
@@ -79,6 +148,16 @@ static int line_edit_on_key(Node* self, int key) {
                 memmove(&d->text[d->cursor_pos - 1], &d->text[d->cursor_pos], len - d->cursor_pos + 1);
                 d->cursor_pos--;
             }
+            line_edit_ensure_cursor_visible(self);
+            return 1;
+        }
+
+        if (key == KEY_DC) { // Delete key
+            int len = (int)strlen(d->text);
+            if (d->cursor_pos < len) {
+                memmove(&d->text[d->cursor_pos], &d->text[d->cursor_pos + 1], len - d->cursor_pos);
+            }
+            line_edit_ensure_cursor_visible(self);
             return 1;
         }
 
@@ -88,6 +167,23 @@ static int line_edit_on_key(Node* self, int key) {
             memmove(&d->text[d->cursor_pos + 1], &d->text[d->cursor_pos], len - d->cursor_pos + 1);
             d->text[d->cursor_pos] = (char)key;
             d->cursor_pos++;
+            line_edit_ensure_cursor_visible(self);
+            return 1;
+        }
+
+        if (key == KEY_LEFT) {
+            if (d->cursor_pos > 0) {
+                d->cursor_pos--;
+            }
+            line_edit_ensure_cursor_visible(self);
+            return 1;
+        }
+
+        if (key == KEY_RIGHT) {
+            if (d->cursor_pos < (int)strlen(d->text)) {
+                d->cursor_pos++;
+            }
+            line_edit_ensure_cursor_visible(self);
             return 1;
         }
     }
@@ -110,13 +206,14 @@ Node* line_edit_create(int length) {
     d->length = length;
     d->cursor_pos = 0;
     d->text = strdup("");
+    d->scroll_offset = 0;
 
     n->impl = d;
     n->render = line_edit_render; 
     n->measure = line_edit_measure;
     n->on_key = line_edit_on_key;
-
-    node_set_focusable(n, 1);
+    n->enabled = 1;
+    n->focusable = 1;
 
     return n;
 }

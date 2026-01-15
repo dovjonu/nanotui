@@ -1,5 +1,8 @@
 #include <stdlib.h>
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
+#include <wchar.h>
+#include <locale.h>
+#include <time.h>
 
 #include <nanotui/ui.h>
 #include <nanotui/render.h>
@@ -29,11 +32,15 @@ void ui_run(UI* ui) {
     if (!ui) return;
     if (!ui->root) return;
 
+    setlocale(LC_ALL, "");
     initscr();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
     curs_set(0);
+
+    timeout(30);
+
     start_color();
 	init_pair(1, COLOR_RED, COLOR_BLACK);
     init_pair(2, COLOR_BLUE, COLOR_WHITE);
@@ -58,6 +65,9 @@ void ui_run(UI* ui) {
         backend_ncurses_flush(rb);
 
         int key = getch();
+        if (key == ERR) {
+            continue;   // no input, just redraw
+        }
 
         // global keys
         if (!ui->locked && (key == 'q' || key == 27)) { // q or ESC
@@ -118,4 +128,10 @@ int ui_get_locked(const UI* ui) {
 void ui_destroy(UI* ui) {
     if (!ui) return;
     free(ui);
+}
+
+long ui_now_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 }

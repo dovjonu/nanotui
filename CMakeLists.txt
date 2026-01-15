@@ -3,11 +3,16 @@ project(nanotui C)
 
 set(CMAKE_C_STANDARD 99)
 
-find_package(Curses REQUIRED)
+# Find ncursesw explicitly
+find_library(NCURSESW_LIB ncursesw REQUIRED)
+find_library(TINFO_LIB tinfo REQUIRED)
 
-include_directories(include)
+include_directories(
+    include
+    /usr/include/ncursesw
+)
 
-add_library(nanotui
+add_library(nanotui SHARED
     src/ui.c
     src/node.c
     src/render.c
@@ -20,9 +25,13 @@ add_library(nanotui
     src/layouts/hbox.c
 )
 
-target_link_libraries(nanotui ${CURSES_LIBRARIES})
+target_link_libraries(nanotui
+    ${NCURSESW_LIB}
+    ${TINFO_LIB}
+)
 
 add_executable(button_example examples/button_example.c)
 target_link_libraries(button_example nanotui)
+
 add_executable(test2 examples/test2.c)
 target_link_libraries(test2 nanotui)

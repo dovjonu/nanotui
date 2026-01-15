@@ -75,6 +75,16 @@ void on_checkbox_toggled(Node* checkbox, void* user_data) {
     free(output);
 }
 
+void toggle_line_edit_enabled(Node* checkbox, void* user_data) {
+    (void)checkbox;
+    Node* line_edit = (Node*)user_data;
+    if (!line_edit)
+        return;
+
+    int checked = checkbox_is_checked(checkbox);
+    node_set_enabled(line_edit, checked);
+}
+
 int main(void) {
     UI* ui = ui_create();
 
@@ -85,7 +95,8 @@ int main(void) {
     Node* left = vbox_create(1);
     node_border_set_mask(left, BORDER_TOP | BORDER_BOTTOM | BORDER_LEFT | BORDER_RIGHT);
     node_border_set_title(left, (BorderTitle){ .text = "Button Demo", .position = BORDER_TITLE_CENTER });
-    node_set_flex(left, 3);
+    node_set_flex_x(left, 3);
+    node_set_flex_y(left, 3);
     node_add_child(left, label_create("Press Right Arrow key to focus to a next object"));
     node_add_child(left, label_create("Press Enter or Space to activate button"));
     node_add_child(left, label_create("Press q or ESC to quit"));
@@ -98,14 +109,17 @@ int main(void) {
     Node* right = vbox_create(1);
     node_border_set_mask(right, BORDER_TOP | BORDER_BOTTOM | BORDER_LEFT | BORDER_RIGHT);
     node_border_set_title(right, (BorderTitle){ .text = "More Buttons", .position = BORDER_TITLE_LEFT });
-    node_set_flex(right, 2);
+    node_set_flex_x(right, 2);
+    //node_set_flex_y(right, 2);
     node_add_child(right, button_create("Button 1", on_button_pressed, output));
     node_add_child(right, button_create("Button 2", on_button_pressed, output));
     node_add_child(right, button_create("Button 3", on_button_pressed, output));
     node_add_child(right, checkbox_create("Checkbox 1", on_checkbox_toggled, output));
     node_add_child(right, checkbox_create("Checkbox 2", on_checkbox_toggled, output));
     node_add_child(right, line_edit_create(10));
-
+    Node* le = line_edit_create(12);
+    node_add_child(right, checkbox_create("Enable Line Edit", toggle_line_edit_enabled, le));
+    node_add_child(right, le);
 
     node_add_child(root, right);
 

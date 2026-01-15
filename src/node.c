@@ -23,32 +23,59 @@ void node_init(Node* node) {
 
     node->width_hint = (SizeHint){ .min = 1, .pref = 1, .max = -1 };
     node->height_hint = (SizeHint){ .min = 1, .pref = 1, .max = -1 };
-    node->flex = 0;
+    node->flex_x = 0;
+    node->flex_y = 0;
 }
 
 BorderStyle node_border_style_ascii(void) {
     return (BorderStyle){
-        .top = '-',
-        .bottom = '-',
-        .left = '|',
-        .right = '|',
-        .top_left = '+',
-        .top_right = '+',
-        .bottom_left = '+',
-        .bottom_right = '+',
+        .top = L'-',
+        .bottom = L'-',
+        .left = L'|',
+        .right = L'|',
+        .top_left = L'+',
+        .top_right = L'+',
+        .bottom_left = L'+',
+        .bottom_right = L'+',
     };
 }
 
 BorderStyle node_border_style_ascii_thick(void) {
     return (BorderStyle){
-        .top = '=',
-        .bottom = '=',
-        .left = '#',
-        .right = '#',
-        .top_left = '+',
-        .top_right = '+',
-        .bottom_left = '+',
-        .bottom_right = '+',
+        .top = L'=',
+        .bottom = L'=',
+        .left = L'#',
+        .right = L'#',
+        .top_left = L'+',
+        .top_right = L'+',
+        .bottom_left = L'+',
+        .bottom_right = L'+',
+    };
+}
+
+BorderStyle node_border_style_unicode(void) {
+    return (BorderStyle){
+        .top          = L'─',
+        .bottom       = L'─',
+        .left         = L'│',
+        .right        = L'│',
+        .top_left     = L'┌',
+        .top_right    = L'┐',
+        .bottom_left  = L'└',
+        .bottom_right = L'┘',
+    };
+}
+
+BorderStyle node_border_style_unicode_rounded(void) {
+    return (BorderStyle){
+        .top          = L'─',
+        .bottom       = L'─',
+        .left         = L'│',
+        .right        = L'│',
+        .top_left     = L'╭',
+        .top_right    = L'╮',
+        .bottom_left  = L'╰',
+        .bottom_right = L'╯',
     };
 }
 
@@ -179,16 +206,28 @@ SizeHint node_get_height_hint(const Node* node) {
     return node->height_hint;
 }
 
-void node_set_flex(Node* node, int flex) {
+void node_set_flex_x(Node* node, int flex) {
     if (!node)
         return;
-    node->flex = flex < 0 ? 0 : flex;
+    node->flex_x = flex < 0 ? 0 : flex;
 }
 
-int node_get_flex(const Node* node) {
+int node_get_flex_x(const Node* node) {
     if (!node)
         return 0;
-    return node->flex;
+    return node->flex_x;
+}
+
+void node_set_flex_y(Node* node, int flex) {
+    if (!node)
+        return;
+    node->flex_y = flex < 0 ? 0 : flex;
+}
+
+int node_get_flex_y(const Node* node) {
+    if (!node)
+        return 0;
+    return node->flex_y;
 }
 
 void node_measure(Node* node) {
@@ -330,8 +369,8 @@ void node_render_border(Node* n, RenderBuffer* rb) {
                 render_buffer_put(rb, px, y0, bc.title.text[i]);
             }
         }
-        render_buffer_put(rb, title_x - 1, y0, ' ');
-        render_buffer_put(rb, title_x + title_len, y0, ' ');
+        render_buffer_put(rb, title_x - 1, y0, L'•');
+        render_buffer_put(rb, title_x + title_len, y0, L'•');
     }
 }
 
@@ -351,6 +390,14 @@ void node_set_focus(Node* node, int focused) {
 
 int node_has_focus(const Node* node) {
     return node ? node->focused : 0;
+}
+void node_set_enabled(Node* node, int enabled) {
+    if (!node) return;
+    node->enabled = enabled ? 1 : 0;
+}
+
+int node_is_enabled(const Node* node) {
+    return node ? node->enabled : 0;
 }
 
 int node_handle_key(Node* node, int key) {

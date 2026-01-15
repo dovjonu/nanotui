@@ -42,19 +42,22 @@ static void checkbox_render(Node* self, RenderBuffer* rb) {
     int w = self->width;
     if (w <= 0 || self->height <= 0) return;
 
-    char checkmark = ' ';
+    wchar_t checkmark = L'□';
+    if (self->focused) {
+        checkmark = L'□';
+    }
     if (d->checked)
-        checkmark = 'X';
+        checkmark = L'☒';
 
 
     // draw left bracket
-    render_buffer_put_attr(rb, x, y, l, attr);
-    render_buffer_put_attr(rb, x+1, y, checkmark, attr);
-    render_buffer_put_attr(rb, x+2, y, r, attr);
+    //render_buffer_put_attr(rb, x, y, l, attr);
+    render_buffer_put_attr(rb, x, y, checkmark, attr);
+    render_buffer_put_attr(rb, x+2, y, ' ', attr);
 
     // draw text
-    int tx = x + 3;
-    int max = w - 3;
+    int tx = x + 2;
+    int max = w - 2;
     for (int i = 0; i < max && t[i]; i++) {
         render_buffer_put_attr(rb, tx + i, y, t[i], attr);
     }
