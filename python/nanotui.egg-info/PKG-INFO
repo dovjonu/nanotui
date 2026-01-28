@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: nanotui
+Version: 0.1.0
+Summary: nanotui python bindings
+Requires-Python: >=3.9

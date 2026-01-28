@@ -1,0 +1,17 @@
+pyproject.toml
+setup.py
+../src/node.c
+../src/render.c
+../src/layouts/vbox.c
+../src/widgets/label.c
+/home/dovjonu/PROJECTS/nanotui/python/nanotui/_nanotui.c
+/home/dovjonu/PROJECTS/nanotui/src/node.c
+/home/dovjonu/PROJECTS/nanotui/src/layouts/vbox.c
+/home/dovjonu/PROJECTS/nanotui/src/widgets/label.c
+nanotui/__init__.py
+nanotui/_nanotui.c
+nanotui/api.py
+nanotui.egg-info/PKG-INFO
+nanotui.egg-info/SOURCES.txt
+nanotui.egg-info/dependency_links.txt
+nanotui.egg-info/top_level.txt
